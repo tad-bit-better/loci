@@ -106,7 +106,7 @@ export default function PalaceScreen() {
                 <Pressable
                   key={s.place}
                   accessibilityRole="button"
-                  accessibilityLabel={`Stop ${i + 1}, ${s.place}: ${s.item}`}
+                  accessibilityLabel={`Stop ${i + 1}, ${s.place}: ${s.word}`}
                   accessibilityState={{ selected: on }}
                   onPress={() => setStopIdx(i)}
                   style={[styles.stop, { left: fx * plan.w - 40, top: fy * plan.h - 22 }]}
@@ -147,10 +147,17 @@ export default function PalaceScreen() {
           <Text style={type.bodyMuted}>{stop.review}</Text>
         </View>
         <Text style={[type.h2, { fontSize: 22 }]}>
-          <Text style={{ backgroundColor: strengthColor[stop.strength] }}> {stop.item} </Text>
+          <Text style={{ backgroundColor: strengthColor[stop.strength] }}> {stop.word} </Text>
         </Text>
-        <Text style={type.body}>{stop.mnemonic}</Text>
-        <Text style={[type.note, { fontSize: 17 }]}>— {stop.source}</Text>
+        <Text style={type.bodyMuted}>{stop.meaning}</Text>
+        {stop.image ? (
+          <>
+            <Text style={[type.note, { fontSize: 19 }]}>sounds like “{stop.soundsLike}”</Text>
+            <Text style={type.body}>{stop.image}</Text>
+          </>
+        ) : (
+          <Text style={[type.note, { fontSize: 17 }]}>no picture yet</Text>
+        )}
       </IndexCard>
     </Paper>
   );

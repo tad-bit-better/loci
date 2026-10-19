@@ -44,6 +44,9 @@ export default function RootLayout() {
         >
           <Stack.Screen name="index" />
           <Stack.Screen name="onboarding/goal" />
+          <Stack.Screen name="onboarding/baseline" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="onboarding/lesson" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="onboarding/retest" options={{ gestureEnabled: false }} />
           <Stack.Screen name="onboarding/hook" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="drill/memorize" options={{ gestureEnabled: false }} />

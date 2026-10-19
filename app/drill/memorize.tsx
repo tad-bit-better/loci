@@ -1,48 +1,36 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
-import {
-  HandIcon,
-  Highlight,
-  IndexCard,
-  Paper,
-  PencilUnderline,
-  SketchButton,
-  StickyNote,
-} from '@/components';
+import { Highlight, IndexCard, Paper, PencilUnderline, SketchButton, StickyNote } from '@/components';
 import { DrillHeader } from '@/components/DrillHeader';
 import { drill, useDrill } from '@/lib/drillStore';
-import { suggestMnemonic } from '@/lib/mnemonics';
 import { useCountdown } from '@/lib/useCountdown';
-import { colors, type } from '@/theme';
+import { colors, fonts, type } from '@/theme';
 
+/**
+ * Keyword method: the word's sound → a concrete sound-alike → an image that joins it to the meaning →
+ * the image happens at a stop. Recall then walks the stops and asks for the word from its meaning.
+ */
 export default function MemorizeScreen() {
   const s = useDrill();
   const { label, done } = useCountdown(5 * 60);
-  const [idea, setIdea] = useState<string>('');
 
   const i = s.memorizeIndex;
-  const word = s.words[i];
+  const v = s.vocab[i];
   const stop = s.stops[i];
+  const own = s.ownImages[i] ?? '';
   const last = i >= s.words.length - 1;
 
   useEffect(() => {
     if (done) router.replace('/drill/recall');
   }, [done]);
 
-  useEffect(() => {
-    setIdea('');
-    if (!word) return;
-    suggestMnemonic({ item: word, location: stop, technique: 'palace' })
-      .then((r) => setIdea(r.mnemonic))
-      .catch(() => setIdea(''));
-  }, [word, stop]);
-
-  if (!word) return null;
+  if (!v) return null;
 
   return (
     <Paper
+      scroll
       footer={
         <View style={styles.actions}>
           <SketchButton
@@ -63,26 +51,45 @@ export default function MemorizeScreen() {
       <DrillHeader step={1} timer={label} />
 
       <View>
-        <Text style={type.h2}>Place each word in your palace.</Text>
-        <Text style={type.note}>the weirder the picture, the better it sticks</Text>
+        <Text style={type.h2}>Hear it, see it, place it.</Text>
+        <Text style={type.note}>say the sound-alike out loud, then picture the scene</Text>
       </View>
 
-      <IndexCard tilt={-1} style={styles.center}>
+      <IndexCard tilt={-1}>
         <Text style={type.note}>
           word {i + 1} of {s.words.length}
         </Text>
-        <PencilUnderline style={styles.word}>{word}</PencilUnderline>
-        <HandIcon name="arrowDown" size={30} strokeWidth={2.2} />
-        <Text style={type.bodyMuted}>put it at</Text>
-        <Highlight color="green" style={type.h3}>
-          stop {i + 1} · {stop}
-        </Highlight>
+        <PencilUnderline style={styles.word}>{v.word}</PencilUnderline>
+        <Text style={type.body}>{v.meaning}</Text>
+
+        <View style={styles.divider} />
+
+        <View style={styles.step}>
+          <Text style={[type.note, styles.stepLabel]}>sounds like</Text>
+          <Highlight style={type.h3}>{v.soundsLike}</Highlight>
+        </View>
+        <View style={styles.step}>
+          <Text style={[type.note, styles.stepLabel]}>picture it at</Text>
+          <Highlight color="green" style={type.h3}>
+            stop {i + 1} · {stop}
+          </Highlight>
+        </View>
+        <Text style={type.body}>{own.trim() || v.image}</Text>
       </IndexCard>
 
       <StickyNote>
-        <Text style={[type.note, { color: '#5B4A00', fontSize: 19 }]}>idea, if you're stuck:</Text>
-        <Text style={type.body}>{idea || 'Thinking…'}</Text>
-        <Text style={[type.note, { fontSize: 19, color: colors.ink }]}>✎ write my own instead</Text>
+        <Text style={[type.note, { fontSize: 19, color: colors.ink }]} nativeID="ownImageLabel">
+          make it yours (optional)
+        </Text>
+        <TextInput
+          value={own}
+          onChangeText={(t) => drill.setOwnImage(i, t)}
+          placeholder="rewrite the picture your way: your own scenes stick best"
+          placeholderTextColor={colors.pencil}
+          multiline
+          accessibilityLabelledBy="ownImageLabel"
+          style={styles.ownInput}
+        />
       </StickyNote>
 
       <View style={{ gap: 4 }}>
@@ -121,7 +128,18 @@ function WalkTrail({ total, current }: { total: number; current: number }) {
 }
 
 const styles = StyleSheet.create({
-  center: { alignItems: 'center' },
-  word: { fontSize: 46, lineHeight: 54 },
+  // GRE words run to 12+ letters ("ostentatious"), so smaller than a concrete-noun drill needs.
+  word: { fontSize: 36, lineHeight: 44 },
+  divider: { height: 1, backgroundColor: colors.ruled },
+  step: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
+  stepLabel: { fontSize: 19, width: 104 },
+  ownInput: {
+    minHeight: 44,
+    fontFamily: fonts.scriptMedium,
+    fontSize: 21,
+    lineHeight: 24,
+    color: colors.ink,
+    textAlignVertical: 'top',
+  },
   actions: { flexDirection: 'row', gap: 10 },
 });

@@ -3,6 +3,8 @@
 React Native (Expo SDK 57, React Native 0.86, TypeScript) starter for Loci: learn memory techniques,
 build a memory palace, and play memory games. Notebook-style UI: ruled paper, highlighters, pencil.
 
+**Start here:** `PLAN.md` (what to build next) · `CLAUDE.md` (conventions + gotchas) · `docs/` (product, design, architecture, decisions).
+
 The app runs **fully offline out of the box** (local SQLite + sample data). Supabase, the AI edge function
 and RevenueCat are wired in but optional until you fill in `.env`.
 
@@ -17,22 +19,41 @@ and RevenueCat are wired in but optional until you fill in `.env`.
 | VS Code | latest | Open the folder and accept the recommended extensions |
 | Android Studio | latest | Android emulator + SDK (Windows, macOS, Linux) |
 | Xcode | latest (macOS only) | iOS simulator. On Windows/Linux, test iOS with EAS Build + a real iPhone |
-| Expo Go *or* a dev build | — | Expo Go is fine for UI work if it supports SDK 57; purchases need a dev build |
+| A development build | — | **Expo Go won't work**: the store version lags behind SDK 57, and this project uses `expo-dev-client` |
 | Supabase CLI | latest | `npm i -D supabase` or `brew install supabase/tap/supabase` |
 | EAS CLI | latest | `npm i -g eas-cli` — cloud builds and store submission |
 | Docker Desktop | optional | Only for running Supabase locally (`supabase start`) |
 
-## 2. First run (about 5 minutes)
+## 2. First run
 
 ```bash
 cd loci-app
 code .                     # VS Code → "Install recommended extensions" when prompted
 npm install
-npx expo start             # press a (Android), i (iOS sim), or scan the QR with Expo Go
 ```
 
-Fresh install opens onboarding → goal → hook → home. To replay onboarding, delete the app data
-(or clear the `settings` table in the local DB).
+**Step 1 — install a development build on your phone (once).** This is your own "Loci" app with the
+native code baked in. Scanning the QR code with Expo Go will just close the app.
+
+```bash
+npm i -g eas-cli
+eas login                                              # free Expo account
+eas build --profile development --platform android     # ~10–15 min; open the link on your phone, install the APK
+# iPhone: eas device:create, then eas build --profile development --platform ios (paid Apple Developer account)
+```
+
+Or build locally with Android Studio / Xcode: `npm run android` / `npm run ios` (phone plugged in or emulator open).
+
+**Step 2 — run the dev server.**
+
+```bash
+npx expo start             # scan the QR with your camera; it opens in the Loci dev build
+```
+
+Rebuild the development build only when you add or update a package with native code.
+For JS/TS changes, the dev server hot-reloads.
+
+Fresh install opens onboarding → goal → hook → home. To replay onboarding, clear the app's data.
 
 Useful scripts:
 
@@ -45,23 +66,14 @@ npx expo install --check   # fix any SDK version drift after adding packages
 
 Always add Expo/React Native libraries with `npx expo install <pkg>` so versions match SDK 57.
 
-## 3. Development build (needed for purchases, recommended anyway)
+## 3. Troubleshooting builds
 
-`react-native-purchases` (RevenueCat) contains native code that Expo Go doesn't ship, so build your own
-dev client once:
-
-```bash
-# Local (needs Android Studio / Xcode):
-npx expo run:android
-npx expo run:ios
-
-# Or in the cloud (works from Windows for iOS too):
-eas login
-eas build --profile development --platform android
-eas build --profile development-simulator --platform ios   # iOS simulator build
-```
-
-Then `npx expo start --dev-client` and open the installed "Loci" dev app.
+- **`resource drawable/splashscreen_logo not found`**: fixed. The splash plugin needs an `image`
+  (`assets/images/splash-icon.png`).
+- **Check locally before spending a cloud build:** `npx expo prebuild --platform android --clean`
+  generates the native project the same way EAS does. Delete `android/` afterwards (it's gitignored).
+- **Version drift:** `npx expo install --check`, then `npm run doctor`.
+- **iOS simulator build** (no Apple account needed): `eas build --profile development-simulator --platform ios`.
 
 ## 4. Backend: Supabase
 
@@ -102,6 +114,9 @@ app/                         Expo Router screens (file = route)
   _layout.tsx                fonts, splash, DB migration, root stack
   index.tsx                  redirect: onboarding or home
   onboarding/goal.tsx        step 1 — pick goals
+  onboarding/baseline.tsx    step 2 — memorize 10 words in 30 s, free recall
+  onboarding/lesson.tsx      step 3 — story-method lesson, scene by scene
+  onboarding/retest.tsx      step 3 — recall the story words
   onboarding/hook.tsx        step 4 — before/after score, name the palace
   (tabs)/                    Home, Palace, Play, Leagues, Profile
   drill/memorize.tsx         word drill step 1 — place each word at a stop
@@ -113,31 +128,36 @@ src/
                              StickyNote, Tape, HandCheckbox, Tally, SketchProgress,
                              HandIcon, PalaceSketch, DrillHeader
   lib/                       supabase, localDb (expo-sqlite), fsrs (ts-fsrs), mnemonics,
-                             purchases (RevenueCat), drillStore, useCountdown
-  data/sample.ts             sample rooms, stops and drill words
+                             purchases (RevenueCat), drillStore, useCountdown, recall (word matching),
+                             progress (XP, levels, streak, saving drill results),
+                             vocab (word picking, seeded Daily Challenge)
+  data/sample.ts             goals, onboarding words, sample rooms and stops, drill walk
+  data/greVocab.ts           GRE starter words with WordNet meanings (licence: docs/THIRD_PARTY.md)
 supabase/
   migrations/                schema + RLS + helper functions
   functions/generate-mnemonic AI mnemonic edge function (Deno)
-docs/DESIGN.md               the notebook design language
+docs/                        PRODUCT, DESIGN, ARCHITECTURE, DECISIONS
+.claude/                     Claude Code permissions + slash commands (/next, /screen, /check, /migration)
+PLAN.md                      roadmap with checkboxes
+CLAUDE.md                    guidance for AI coding assistants
 ```
 
 ## 7. What works now vs. TODO
 
 Works:
-- Onboarding goal picker → hook → home (persisted in SQLite)
+- Onboarding: goal picker → baseline test → story-method lesson → retest → hook with real scores → home
 - Home with palace sketch, streak tallies, to-do list
 - Palace room view: tabs, floor plan with walking order, stop details coloured by memory strength
-- Full word drill: memorize 20 words (with AI or offline idea) → timed recall with red-pen grading
+- Full word drill (GRE vocab, keyword method): memorize 10 words with a sound-alike and image at each stop → timed recall with red-pen grading;
+  results saved (session, palace XP, an FSRS card per word) and Home shows real XP, level and streak
 - Paywall with plan selection
 - Supabase schema with RLS; AI edge function with cache and daily limits
 
 Next up (MVP order):
-1. Onboarding steps 2–3: baseline test + story-method lesson + retest (feed real scores to the hook)
-2. Persist drill results: `sessions`, XP, FSRS cards (`src/lib/fsrs.ts` is ready)
-3. "My Stuff": add your own items to a stop, AI-assisted encoding, review queue
-4. Auth (Apple / Google) and the local ↔ Supabase sync queue (`dirty` columns are in place)
-5. RevenueCat purchase flow + webhook
-6. Daily Challenge seed + leaderboard, analytics events, store listings
+1. "My Stuff": add your own items to a stop, AI-assisted encoding, review queue
+2. Auth (Apple / Google) and the local ↔ Supabase sync queue (`dirty` columns are in place)
+3. RevenueCat purchase flow + webhook
+4. Daily Challenge seed + leaderboard, analytics events, store listings
 
 ## 8. VS Code tips
 

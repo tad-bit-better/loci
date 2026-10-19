@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import {
   HandCheckbox,
@@ -11,16 +11,22 @@ import {
 } from '@/components';
 import { PalaceSketch } from '@/components/PalaceSketch';
 import { drill } from '@/lib/drillStore';
-import { getSetting } from '@/lib/localDb';
+import { dayKey, getProgress, levelFor, type Progress } from '@/lib/progress';
 import { colors, type } from '@/theme';
 
+/** Windows in the palace sketch. */
+const MAX_LIT = 7;
+
 export default function HomeScreen() {
-  const [palaceName, setPalaceName] = useState('My Palace');
+  const [p, setP] = useState<Progress>({ palaceName: 'My Palace', xp: 0, streak: 0, ...levelFor(0) });
   const [lessonDone, setLessonDone] = useState(true);
 
-  useEffect(() => {
-    getSetting('palaceName').then((v) => v && setPalaceName(v));
-  }, []);
+  // Tabs stay mounted, so refresh whenever Home comes back into view (e.g. after a drill).
+  useFocusEffect(
+    useCallback(() => {
+      getProgress().then(setP).catch((e) => console.warn('Loading progress failed', e));
+    }, []),
+  );
 
   const today = new Date().toLocaleDateString(undefined, {
     weekday: 'short',
@@ -37,19 +43,21 @@ export default function HomeScreen() {
         </View>
         <View style={styles.streak}>
           <View style={styles.row}>
-            <Tally count={12} />
-            <Text style={type.h3}>12</Text>
+            <Tally count={p.streak} />
+            <Text style={type.h3}>{p.streak}</Text>
           </View>
-          <Text style={[type.note, styles.small]}>day streak · 2,340 XP</Text>
+          <Text style={[type.note, styles.small]}>
+            day streak · {p.xp.toLocaleString()} XP
+          </Text>
         </View>
       </View>
 
       <IndexCard tilt={1} style={styles.palaceCard}>
-        <PalaceSketch litRooms={5} />
+        <PalaceSketch litRooms={Math.min(p.level, MAX_LIT)} />
         <View style={styles.rowBetween}>
           <View>
-            <Text style={type.h3}>{palaceName}</Text>
-            <Text style={type.bodyMuted}>Level 3 · The Keep · 5 rooms</Text>
+            <Text style={type.h3}>{p.palaceName}</Text>
+            <Text style={type.bodyMuted}>Level {p.level}</Text>
           </View>
           <SketchButton
             label="Enter"
@@ -58,18 +66,20 @@ export default function HomeScreen() {
             onPress={() => router.push('/(tabs)/palace')}
           />
         </View>
-        <SketchProgress value={340 / 500} />
-        <Text style={[type.note, styles.small]}>340 / 500 XP · 160 more to open the Library!</Text>
+        <SketchProgress value={p.into / p.goal} />
+        <Text style={[type.note, styles.small]}>
+          {p.into} / {p.goal} XP · {p.goal - p.into} more to reach level {p.level + 1}
+        </Text>
       </IndexCard>
 
       <View>
         <Text style={type.h3}>Today's to-do</Text>
         <HandCheckbox
           label="Daily Challenge"
-          description="20 words · 2 min · same for everyone · tap to play"
+          description="10 GRE words · same for everyone today · tap to play"
           checked={false}
           onToggle={() => {
-            drill.reset();
+            drill.reset(dayKey(new Date())); // same words for everyone today
             router.push('/drill/memorize');
           }}
         />

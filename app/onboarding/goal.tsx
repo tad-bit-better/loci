@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { HandCheckbox, Highlight, Paper, SketchButton } from '@/components';
 import { goals, type GoalId } from '@/data/sample';
 import { setSetting } from '@/lib/localDb';
-import { type } from '@/theme';
+import { colors, type } from '@/theme';
 
 export default function GoalScreen() {
   const [picked, setPicked] = useState<Set<GoalId>>(new Set(['exams']));
@@ -19,8 +19,7 @@ export default function GoalScreen() {
 
   const onContinue = async () => {
     await setSetting('goals', JSON.stringify([...picked]));
-    // TODO: insert the 30-second baseline test + story-method lesson screens here (steps 2 and 3).
-    router.push('/onboarding/hook');
+    router.push('/onboarding/baseline');
   };
 
   return (
@@ -61,7 +60,7 @@ export default function GoalScreen() {
 const styles = StyleSheet.create({
   step: { alignSelf: 'flex-end' },
   titleBlock: { gap: 2 },
-  muted: { color: '#5B606B', marginTop: 6 },
+  muted: { color: colors.pencil, marginTop: 6 },
   hint: { transform: [{ rotate: '-2deg' }], paddingLeft: 30 },
   center: { textAlign: 'center' },
 });

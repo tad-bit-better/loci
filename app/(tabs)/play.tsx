@@ -6,7 +6,7 @@ import { type } from '@/theme';
 
 /** Game modes. Only the word drill is wired up in the starter. */
 const modes = [
-  { title: 'Word drill', body: '20 words, place them, walk them back.', ready: true },
+  { title: 'GRE word drill', body: '10 words: hear it, picture it, place it, walk it back.', ready: true },
   { title: 'Numbers', body: 'Major System digits. Unlocks at Adept.', ready: false },
   { title: 'Names and faces', body: 'Remember who everyone is.', ready: false },
   { title: 'Card deck', body: 'Memory-sport classic.', ready: false },

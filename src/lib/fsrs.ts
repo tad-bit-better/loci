@@ -3,6 +3,7 @@ import {
   fsrs,
   generatorParameters,
   Rating,
+  TypeConvert,
   type Card,
   type Grade,
 } from 'ts-fsrs';
@@ -15,6 +16,10 @@ export { Rating };
 export type { Card, Grade };
 
 export const newCard = (now = new Date()): Card => createEmptyCard(now);
+
+/** Cards are stored as JSON (`items.fsrs_card`); dates come back as strings, so revive them. */
+export const cardToJson = (card: Card) => JSON.stringify(card);
+export const cardFromJson = (json: string): Card => TypeConvert.card(JSON.parse(json));
 
 /** Apply a review. Map recall results to grades: wrong → Again, slow → Hard, right → Good, instant → Easy. */
 export function review(card: Card, grade: Grade, now = new Date()) {

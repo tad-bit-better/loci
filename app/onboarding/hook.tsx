@@ -1,20 +1,30 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Highlight, IndexCard, Paper, PencilUnderline, SketchButton } from '@/components';
-import { setSetting } from '@/lib/localDb';
+import { getSetting, setSetting } from '@/lib/localDb';
+import { ensurePalace } from '@/lib/progress';
 import { colors, fonts, type } from '@/theme';
 
-/** Step 4: show the before/after jump, then name the palace. Scores come from steps 2–3 (TODO). */
+/** Step 4: show the before/after jump from steps 2–3, then name the palace. */
 export default function HookScreen() {
-  // TODO: read real scores saved by the baseline test and the retest.
-  const before = 4;
-  const after = 9;
+  const [scores, setScores] = useState<{ before: number; after: number } | null>(null);
   const [name, setName] = useState('The Night Palace');
 
+  useEffect(() => {
+    Promise.all([getSetting('baselineScore'), getSetting('retestScore')]).then(([b, a]) =>
+      setScores({ before: Number(b ?? 0), after: Number(a ?? 0) }),
+    );
+  }, []);
+
+  if (!scores) return null;
+  const { before, after } = scores;
+
   const onBuild = async () => {
-    await setSetting('palaceName', name.trim() || 'My Palace');
+    const palaceName = name.trim() || 'My Palace';
+    await setSetting('palaceName', palaceName);
+    await ensurePalace(palaceName);
     await setSetting('onboarded', 'true');
     router.replace('/(tabs)');
   };
@@ -62,8 +72,14 @@ export default function HookScreen() {
             <Text style={styles.score}>{after}/10</Text>
           </View>
         </View>
-        {after >= before * 2 && (
-          <Text style={[type.noteRed, styles.scribble]}>more than 2× in one minute!</Text>
+        {after > before ? (
+          <Text style={[type.noteRed, styles.scribble]}>
+            {before > 0 && after >= before * 2
+              ? 'doubled in one minute!'
+              : `+${after - before} words with one trick`}
+          </Text>
+        ) : (
+          <Text style={[type.note, styles.scribble]}>it gets easier every time you practise</Text>
         )}
       </IndexCard>
 

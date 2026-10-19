@@ -5,6 +5,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { Highlight, IndexCard, Paper, SketchButton, StickyNote } from '@/components';
 import { DrillHeader } from '@/components/DrillHeader';
 import { drill, useDrill } from '@/lib/drillStore';
+import { saveDrillResult, XP_PER_CORRECT } from '@/lib/progress';
 import { useCountdown } from '@/lib/useCountdown';
 import { colors, fonts, type } from '@/theme';
 
@@ -14,15 +15,19 @@ export default function RecallScreen() {
   const [value, setValue] = useState('');
   const [showHint, setShowHint] = useState(false);
   const input = useRef<TextInput>(null);
+  const saving = useRef<Promise<unknown> | null>(null);
 
   const i = s.recallIndex;
   const finished = i >= s.stops.length || done;
   const correct = s.answers.filter((a) => a.correct).length;
 
   useEffect(() => {
-    if (finished) {
-      // TODO: save a `sessions` row, award XP, update FSRS cards for each word.
-    }
+    if (!finished || saving.current) return;
+    const d = drill.get();
+    const mnemonics = d.vocab.map((v, k) => d.ownImages[k]?.trim() || v.image);
+    saving.current = saveDrillResult({ mode: 'words', ...d, mnemonics }).catch((e) =>
+      console.warn('Saving drill failed', e),
+    );
   }, [finished]);
 
   const submit = () => {
@@ -38,12 +43,22 @@ export default function RecallScreen() {
 
   if (finished) {
     return (
-      <Paper footer={<SketchButton label="Back home" onPress={() => router.replace('/(tabs)')} />}>
+      <Paper
+        footer={
+          <SketchButton
+            label="Back home"
+            onPress={async () => {
+              await saving.current; // so Home reads the new XP
+              router.replace('/(tabs)');
+            }}
+          />
+        }
+      >
         <Text style={type.h1}>Drill done!</Text>
         <Text style={[type.noteRed, styles.big]}>
           {correct}/{s.stops.length}
         </Text>
-        <Text style={type.body}>+{correct * 10} XP for your palace.</Text>
+        <Text style={type.body}>+{correct * XP_PER_CORRECT} XP for your palace.</Text>
       </Paper>
     );
   }
@@ -66,7 +81,7 @@ export default function RecallScreen() {
 
       <View>
         <Text style={type.h2}>Now walk the palace again.</Text>
-        <Text style={type.note}>stop by stop, what did you leave there?</Text>
+        <Text style={type.note}>at each stop, which word has this meaning?</Text>
       </View>
 
       <IndexCard tilt={0.8}>
@@ -76,8 +91,9 @@ export default function RecallScreen() {
         <Highlight color="green" style={type.h2}>
           {spot}…
         </Highlight>
+        <Text style={type.body}>“{s.vocab[i].meaning}”</Text>
         {showHint && (
-          <Text style={type.bodyMuted}>Starts with “{s.words[i].slice(0, 1).toUpperCase()}”</Text>
+          <Text style={type.bodyMuted}>Sounds like “{s.vocab[i].soundsLike}”</Text>
         )}
         <View style={{ gap: 2 }}>
           <Text style={type.bodyMuted} nativeID="answerLabel">
@@ -108,7 +124,7 @@ export default function RecallScreen() {
           <View style={styles.rowBetween}>
             <Text style={type.h3}>Stops 1–{s.answers.length}</Text>
             <Text style={[type.noteRed, { transform: [{ rotate: '-3deg' }] }]}>
-              {correct}/{s.answers.length} · +{correct * 10} XP
+              {correct}/{s.answers.length} · +{correct * XP_PER_CORRECT} XP
             </Text>
           </View>
           <View style={styles.grid}>
@@ -116,7 +132,8 @@ export default function RecallScreen() {
               <View key={k} style={styles.answer}>
                 <Text style={styles.answerNum}>{k + 1}</Text>
                 {a.correct ? (
-                  <Text style={styles.answerText}>{a.given} ✓</Text>
+                  // Show the right spelling, since a near-miss typo also counts as correct.
+                  <Text style={styles.answerText}>{s.words[k]} ✓</Text>
                 ) : (
                   <>
                     <Text style={[styles.answerText, styles.wrong]}>{a.given}</Text>
@@ -145,7 +162,8 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 10 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  answer: { width: '50%', height: 32, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  // One per row: a struck-through guess plus the GRE word won't fit in half a line.
+  answer: { width: '100%', height: 32, flexDirection: 'row', alignItems: 'center', gap: 6 },
   answerNum: { width: 16, fontFamily: fonts.body, fontSize: 12, color: colors.pencil },
   answerText: { fontFamily: fonts.script, fontSize: 22, color: colors.ink },
   wrong: {
