@@ -82,19 +82,24 @@ cp .env.example .env                       # fill EXPO_PUBLIC_SUPABASE_URL + ANO
 npx supabase init                          # creates supabase/config.toml (keep existing folders)
 npx supabase login
 npx supabase link --project-ref YOUR_REF   # from the Supabase dashboard URL
-npx supabase db push                       # applies supabase/migrations/*
-npx supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
-npx supabase functions deploy generate-mnemonic
+npx supabase db push                       # applies supabase/migrations/* (schema + GRE pack content)
 ```
+
+Use the **free plan** (no card needed): 500 MB database, 50,000 monthly active users, 2 projects.
+Free projects **pause after a week with no requests**; restore from the dashboard. Every app launch with
+`.env` set pulls pack updates, which counts as activity.
 
 Local alternative: `npx supabase start` (Docker), then use the local URL/anon key it prints.
 
 In the dashboard: Authentication → Providers → enable **Apple** and **Google** (sign-in UI is a TODO).
 
-The edge function:
-- reuses identical requests from `mnemonic_cache` (free),
-- limits free users to `FREE_DAILY_LIMIT` (default 5) generations a day via `ai_usage`,
-- uses `MNEMONIC_MODEL` (default `claude-haiku-5-5`). Swap the fetch for any provider you prefer.
+**Content is database-driven.** Pack words, meanings and mnemonics live in `pack_words`. Edit them in
+Table Editor → `pack_words`; `updated_at` bumps on save and devices pull the change on next launch.
+The app also bundles a snapshot (`src/data/greVocab.ts`, `greMnemonics.ts`) so a fresh install works
+offline; refresh it from the database before each store release.
+
+**No AI yet.** `supabase/functions/generate-mnemonic` is parked: don't deploy it, and don't set any LLM
+key, until registration and paid accounts exist (see `docs/DECISIONS.md`).
 
 ## 5. Payments: RevenueCat
 
@@ -127,7 +132,7 @@ src/
   components/                Paper, Highlight, PencilUnderline, SketchButton, IndexCard,
                              StickyNote, Tape, HandCheckbox, Tally, SketchProgress,
                              HandIcon, PalaceSketch, DrillHeader
-  lib/                       supabase, localDb (expo-sqlite), fsrs (ts-fsrs), mnemonics,
+  lib/                       supabase, localDb (expo-sqlite), fsrs (ts-fsrs), packs (content sync),
                              purchases (RevenueCat), drillStore, useCountdown, recall (word matching),
                              progress (XP, levels, streak, saving drill results),
                              vocab (word picking, seeded Daily Challenge)
@@ -135,7 +140,7 @@ src/
   data/greVocab.ts           GRE starter words with WordNet meanings (licence: docs/THIRD_PARTY.md)
 supabase/
   migrations/                schema + RLS + helper functions
-  functions/generate-mnemonic AI mnemonic edge function (Deno)
+  functions/generate-mnemonic AI mnemonic edge function (Deno), parked until paid accounts
 docs/                        PRODUCT, DESIGN, ARCHITECTURE, DECISIONS
 .claude/                     Claude Code permissions + slash commands (/next, /screen, /check, /migration)
 PLAN.md                      roadmap with checkboxes
@@ -151,10 +156,10 @@ Works:
 - Full word drill (GRE vocab, keyword method): memorize 10 words with a sound-alike and image at each stop → timed recall with red-pen grading;
   results saved (session, palace XP, an FSRS card per word) and Home shows real XP, level and streak
 - Paywall with plan selection
-- Supabase schema with RLS; AI edge function with cache and daily limits
+- Supabase schema with RLS; GRE pack content in `pack_words`, synced to the device
 
 Next up (MVP order):
-1. "My Stuff": add your own items to a stop, AI-assisted encoding, review queue
+1. "My Stuff": add your own items to a stop, write your own mnemonic, review queue
 2. Auth (Apple / Google) and the local ↔ Supabase sync queue (`dirty` columns are in place)
 3. RevenueCat purchase flow + webhook
 4. Daily Challenge seed + leaderboard, analytics events, store listings

@@ -28,7 +28,6 @@ npx expo install --check       # fix version drift
 npx expo prebuild --platform android --clean   # sanity-check native config; delete android/ after
 eas build --profile development --platform android
 npx supabase db push           # apply migrations
-npx supabase functions deploy generate-mnemonic
 ```
 
 ## Layout
@@ -40,11 +39,12 @@ app/                    routes. _layout.tsx (fonts, splash, DB migrate, Stack), 
   paywall.tsx           modal
 src/theme/              tokens.ts (colours, fonts, radii, shadows), text.ts (type styles), fonts.ts
 src/components/         notebook UI kit — reuse before creating anything new
-src/lib/                supabase, localDb, fsrs, mnemonics, purchases, drillStore, useCountdown,
+src/lib/                supabase, localDb, fsrs, packs, purchases, drillStore, useCountdown,
                         recall (word matching), progress (XP, level, streak, drill saving),
                         vocab (pickWords, seeded daily words)
 src/data/sample.ts      sample content (to be replaced by SQLite reads)
-src/data/greVocab.ts    GRE starter words; meanings from WordNet (keep the licence notice, docs/THIRD_PARTY.md)
+src/data/greVocab.ts    offline snapshot of the GRE pack (live copy: Supabase pack_words); WordNet meanings,
+                        keep the licence notice (docs/THIRD_PARTY.md). greMnemonics.ts: same, mnemonics
 supabase/migrations/    SQL schema + RLS + helper functions
 supabase/functions/     Deno edge functions (excluded from app tsconfig; Deno extension handles them)
 docs/                   PRODUCT, DESIGN, ARCHITECTURE, DECISIONS
@@ -65,7 +65,10 @@ docs/                   PRODUCT, DESIGN, ARCHITECTURE, DECISIONS
 - Data: offline first. Read/write `src/lib/localDb.ts`; mark rows `dirty = 1` for future sync.
   `supabase` can be `null` (no `.env`) — code must handle that.
 - Spaced repetition only through `src/lib/fsrs.ts`.
-- Secrets never in the app. LLM calls only via `supabase/functions/generate-mnemonic`.
+- **No AI** until registration + paid accounts exist: content is database-driven (`pack_words`, read via
+  `src/lib/packs.ts`). `supabase/functions/generate-mnemonic` is parked; don't deploy or call it.
+- **Free hosting only** (Supabase free plan). Don't add a paid service without asking.
+- Secrets never in the app.
   Only `EXPO_PUBLIC_*` env vars reach the client.
 - New tables: add a migration in `supabase/migrations/` (timestamped), enable RLS, add policies.
 - Comments explain *why*; keep them short. TODOs reference the PLAN.md item.
@@ -97,4 +100,5 @@ docs/                   PRODUCT, DESIGN, ARCHITECTURE, DECISIONS
 - Don't add packages with plain `npm install` if they have native code.
 - Don't commit `.env`, `android/`, `ios/`.
 - Don't put API keys, service-role keys or LLM calls in the app bundle.
+- Don't add AI features or paid services (see Conventions).
 - Don't replace the notebook UI with stock components (no default buttons, cards or icon sets).

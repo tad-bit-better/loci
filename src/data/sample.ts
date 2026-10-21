@@ -1,6 +1,4 @@
 import type { Strength } from '@/theme';
-import { greMnemonics } from './greMnemonics';
-import { greWords } from './greVocab';
 
 /** Sample content used by the screens until real data is wired up. */
 
@@ -13,23 +11,13 @@ export const goals: { id: GoalId; label: string; description: string; color: 'ye
   { id: 'fun', label: 'Just for fun', description: 'Daily challenges and memory games', color: 'blue' },
 ];
 
-export type Stop = {
-  place: string;
-  word: string;
-  meaning: string;
-  soundsLike?: string;
-  image?: string;
-  strength: Strength;
-  review: string;
-};
+/** Meaning and mnemonic come from the pack at render time (`packWord(word)`), not from here. */
+export type Stop = { place: string; word: string; strength: Strength; review: string };
 export type Room = { id: string; name: string; tab: 'yellow' | 'green' | 'pink'; title: string; stops: Stop[] };
 
-const meaningOf = (word: string) => greWords.find((v) => v.word === word)?.meaning ?? '';
 const stop = (place: string, word: string, strength: Strength, review: string): Stop => ({
   place,
   word,
-  meaning: meaningOf(word),
-  ...greMnemonics[word],
   strength,
   review,
 });
@@ -88,7 +76,7 @@ export const storyScenes: { word: string; text: string }[] = [
 
 export const storyWords = storyScenes.map((s) => s.word);
 
-/** Word drill: one stop per word, in walking order. Words come from the GRE pack (src/lib/vocab.ts). */
+/** Word drill: one stop per word, in walking order. Words come from the pack (src/lib/vocab.ts). */
 export const walkStops = [
   'Hall · front door', 'Hall · coat hook', 'Hall · mirror', 'Hall · bench', 'Hall · rug', 'Hall · stairs',
   'Kitchen · doorway', 'Kitchen · the stove', 'Kitchen · sink', 'Kitchen · window', 'Kitchen · fridge',

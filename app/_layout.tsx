@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { migrate } from '@/lib/localDb';
+import { initPacks } from '@/lib/packs';
 import { initPurchases } from '@/lib/purchases';
 import { colors } from '@/theme';
 import { fontAssets } from '@/theme/fonts';
@@ -18,7 +19,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     migrate()
-      .catch((e) => console.warn('DB migration failed', e))
+      .then(initPacks)
+      .catch((e) => console.warn('DB setup failed', e))
       .finally(() => setDbReady(true));
     initPurchases().catch(() => {});
   }, []);

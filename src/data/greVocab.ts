@@ -1,4 +1,7 @@
 /**
+ * Offline snapshot only: the live copy is Supabase `pack_words` (edit it there). This file seeds a fresh
+ * install (src/lib/packs.ts) and generated the gre_starter_pack migration.
+ *
  * GRE starter vocabulary: 143 high-frequency words that appear across common GRE prep lists.
  * The word list is ours; meanings come from WordNet (sense chosen by hand for the GRE meaning,
  * example sentences dropped, long glosses cut to their first clause).

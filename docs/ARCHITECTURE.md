@@ -8,7 +8,8 @@
 │ lib/localDb ── SQLite (source of truth    │ sync │   profiles, palaces, rooms,      │
 │                 on device, dirty flags) ◄─┼──────┼─► stops, items, reviews,         │
 │ lib/fsrs ───── scheduling, on device      │      │   sessions, leagues, packs,      │
-│ lib/mnemonics ─────────────────────────────┼──────┼─► Edge fn: generate-mnemonic ───┼──► LLM API
+│ lib/packs ── pulls pack_words ◄────────────┼──────┼── pack_words (content, edited   │
+│              (offline snapshot bundled)    │      │   in the dashboard)              │
 │ lib/purchases ── RevenueCat SDK ──────────┼──┐   │   (cache, daily limit)           │
 └───────────────────────────────────────────┘  │   └──────────────▲───────────────────┘
                                                │                  │ webhook → profiles.plan
@@ -21,7 +22,8 @@
 2. **No secrets on device.** Only public keys (`EXPO_PUBLIC_*`). LLM and service-role access live in
    edge functions.
 3. **Backend optional in dev.** `supabase` is `null` without `.env`; features degrade gracefully
-   (e.g. `suggestMnemonic` returns a local template).
+   (e.g. packs fall back to the bundled snapshot).
+4. **No AI, free hosting.** Content is database-driven until paid accounts exist; Supabase free plan.
 
 ## Data model
 SQL source: `supabase/migrations/20261019000000_init.sql`. Local mirror: `src/lib/localDb.ts`.
@@ -47,8 +49,14 @@ SQL source: `supabase/migrations/20261019000000_init.sql`. Local mirror: `src/li
 - Drill/recall results map to grades: wrong → Again, slow → Hard, right → Good, instant → Easy.
 - `strengthOf(card)` → `strong | due | weak` → highlighter colour in the UI.
 
-## AI mnemonics
-`suggestMnemonic()` → `supabase.functions.invoke('generate-mnemonic')`:
+## Content packs
+`pack_words` (Supabase) is the source of truth for words, meanings and keyword mnemonics; free packs are
+readable with the anon key (no sign-in yet). On launch, `initPacks()` seeds SQLite from the bundled
+snapshot (first run only), loads the pack into memory, then pulls rows with `updated_at` newer than the
+local copy. A trigger bumps `updated_at` on every edit. Deletes don't propagate yet.
+
+## AI mnemonics (parked until paid accounts)
+Not deployed or called. The design, for later: `supabase.functions.invoke('generate-mnemonic')`:
 verify JWT → cache lookup by sha256(item|location|technique) → free users: `increment_ai_usage` RPC
 (atomic, returns remaining or −1) → LLM call → cache upsert → `{ mnemonic, cached, remainingToday }`.
 Model via `MNEMONIC_MODEL` secret. Future: embeddings in `mnemonic_cache.embedding` for semantic reuse.

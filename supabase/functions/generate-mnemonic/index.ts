@@ -1,3 +1,6 @@
+// PARKED: not deployed and not called by the app. No AI until there are registered, paid accounts
+// (docs/DECISIONS.md). Kept so the premium AI feature has a starting point.
+//
 // Supabase Edge Function (Deno): returns a vivid mnemonic image for an item.
 // Deploy:  supabase functions deploy generate-mnemonic
 // Secrets: supabase secrets set ANTHROPIC_API_KEY=sk-ant-...   (optional: MNEMONIC_MODEL, FREE_DAILY_LIMIT)

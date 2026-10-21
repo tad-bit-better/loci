@@ -5,7 +5,7 @@ The app should feel like a well-loved study notebook, not a generic AI app. Ligh
 ## Materials
 - **Paper** `#FBF7EE` with blue ruled lines every 32 px and a red margin line. Every screen uses `<Paper>`.
 - **Cards** are index cards (`#FFFEFA`) held on with **tape**, tilted −1.5° to 1.5°.
-- **Sticky notes** (`#FFF3A6`) for tips and AI ideas.
+- **Sticky notes** (`#FFF3A6`) for tips and mnemonic ideas.
 
 ## Ink and pens
 - **Graphite ink** `#1F2430` for text and outlines; **pencil** `#5B606B` for secondary text.

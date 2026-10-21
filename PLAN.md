@@ -13,7 +13,8 @@ Architecture: `docs/ARCHITECTURE.md`. Decisions: `docs/DECISIONS.md`.
 - [x] Screens: onboarding goal + hook, tabs (Home, Palace, Play, Leagues, Profile), word drill
       (memorize → recall), paywall
 - [x] Local SQLite schema + settings store; ts-fsrs wrapper; drill store
-- [x] Supabase schema with RLS; `generate-mnemonic` edge function (cache + daily limit)
+- [x] Supabase schema with RLS; `generate-mnemonic` edge function (parked: no AI until paid accounts)
+- [x] Database-driven content: `pack_words` on Supabase (free plan), synced to SQLite, bundled snapshot
 - [x] Android development build installs and runs on a real device
 
 ## Now (next 1–2 weeks)
@@ -29,12 +30,12 @@ Architecture: `docs/ARCHITECTURE.md`. Decisions: `docs/DECISIONS.md`.
 
 ### Learn and encode
 - [ ] Technique lessons: acronym, story, memory palace (3 short interactive lessons each)
-- [ ] "My Stuff": add an item to a stop (prompt, answer), AI-assisted mnemonic, edit it, save
+- [ ] "My Stuff": add an item to a stop (prompt, answer), write your own mnemonic, edit it, save
 - [ ] Review queue: today's due items from FSRS, grade Again/Hard/Good/Easy, streak counts reviews
 - [x] Keyword mnemonics for the whole GRE pack (143, `src/data/greMnemonics.ts`)
 - [ ] Track which mnemonics fail most in recall; rewrite the weakest first
 - [ ] GRE starter pack as review items: place `src/data/greVocab.ts` words at stops (word → meaning),
-      AI mnemonic per word, reviewed through the queue. Drill and palace samples already use the pack.
+      pack mnemonic per word, reviewed through the queue. Drill and palace samples already use the pack.
 
 ### Play
 - [ ] Word drill: difficulty levels (10 / 20 / 30 words), results screen with per-stop breakdown
@@ -51,10 +52,12 @@ Architecture: `docs/ARCHITECTURE.md`. Decisions: `docs/DECISIONS.md`.
 - [ ] RevenueCat products + offering; paywall reads localized prices from offerings
 - [ ] Purchase, restore, entitlement check (`premium`); gate: palaces > 1, AI > 5/day, packs
 - [ ] RevenueCat webhook → edge function → `profiles.plan`
+- [ ] Only after paid accounts: AI mnemonics for premium users' own items (un-park `generate-mnemonic`)
 
 ### Ship
 - [ ] Analytics events (onboarding steps, drill start/finish, paywall view/purchase)
 - [ ] Crash reporting
+- [ ] Script to refresh the bundled pack snapshot from `pack_words` before each release
 - [ ] About / licences screen with the WordNet notice (`docs/THIRD_PARTY.md`), required by its licence
 - [ ] App icon/splash final, store screenshots in notebook style, privacy policy, store listings
 - [ ] Closed beta (Play internal testing + TestFlight), 20–50 users

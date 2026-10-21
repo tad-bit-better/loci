@@ -5,6 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 import { HandIcon, IndexCard, Paper, SketchButton } from '@/components';
 import { lockedRooms, rooms } from '@/data/sample';
 import { drill } from '@/lib/drillStore';
+import { packWord } from '@/lib/packs';
 import { colors, fonts, highlighter, strengthColor, type } from '@/theme';
 
 /** Stop positions on the sketched floor plan, as fractions of the plan's width/height. */
@@ -24,6 +25,7 @@ export default function PalaceScreen() {
 
   const room = rooms.find((r) => r.id === roomId) ?? rooms[0];
   const stop = room.stops[Math.min(stopIdx, room.stops.length - 1)];
+  const v = packWord(stop.word);
 
   return (
     <Paper
@@ -149,11 +151,11 @@ export default function PalaceScreen() {
         <Text style={[type.h2, { fontSize: 22 }]}>
           <Text style={{ backgroundColor: strengthColor[stop.strength] }}> {stop.word} </Text>
         </Text>
-        <Text style={type.bodyMuted}>{stop.meaning}</Text>
-        {stop.image ? (
+        <Text style={type.bodyMuted}>{v?.meaning}</Text>
+        {v?.image ? (
           <>
-            <Text style={[type.note, { fontSize: 19 }]}>sounds like “{stop.soundsLike}”</Text>
-            <Text style={type.body}>{stop.image}</Text>
+            <Text style={[type.note, { fontSize: 19 }]}>sounds like “{v.soundsLike}”</Text>
+            <Text style={type.body}>{v.image}</Text>
           </>
         ) : (
           <Text style={[type.note, { fontSize: 17 }]}>no picture yet</Text>

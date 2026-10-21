@@ -50,6 +50,23 @@ export async function migrate() {
       played_at TEXT NOT NULL DEFAULT (datetime('now')),
       dirty INTEGER NOT NULL DEFAULT 1
     );
+    CREATE TABLE IF NOT EXISTS packs (
+      slug TEXT PRIMARY KEY NOT NULL,
+      title TEXT NOT NULL,
+      is_premium INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS pack_words (
+      pack_slug TEXT NOT NULL REFERENCES packs(slug) ON DELETE CASCADE,
+      word TEXT NOT NULL,
+      pos TEXT NOT NULL,
+      meaning TEXT NOT NULL,
+      sounds_like TEXT,
+      image TEXT,
+      position INTEGER NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (pack_slug, word)
+    );
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY NOT NULL,
       value TEXT NOT NULL

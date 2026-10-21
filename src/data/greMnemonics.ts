@@ -1,8 +1,11 @@
 /**
+ * Offline snapshot only: the live copy is Supabase `pack_words` (edit it there). This file seeds a fresh
+ * install (src/lib/packs.ts) and generated the gre_starter_pack migration.
+ *
  * Keyword-method mnemonics for the GRE pack (our own writing, unlike the WordNet meanings).
  * Each one is a chain: `soundsLike` is a concrete sound-alike for the word, and `image` is a scene that
  * joins that sound-alike to the meaning. Images must work at any stop: the drill prefixes "At the <stop>:".
- * Drills only use words listed here, so a new pack word needs one before it can appear.
+ * Drills only use words that have one, so a new pack word needs one before it can appear.
  */
 export type Mnemonic = { soundsLike: string; image: string };
 

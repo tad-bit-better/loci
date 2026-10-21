@@ -26,7 +26,7 @@ Broad at launch. Onboarding asks the goal (multi-select); country comes from dev
 5. Optional sign-in; soft paywall with "Continue free"
 
 ## Core loop
-Learn (2-min lesson) → Encode (place an item at a stop, AI helps) → Recall (timed) → Review (FSRS)
+Learn (2-min lesson) → Encode (place an item at a stop with a keyword mnemonic) → Recall (timed) → Review (FSRS)
 → Earn (XP, ranks, palace grows).
 
 ## Techniques (skill tree)
@@ -44,7 +44,7 @@ Learn (2-min lesson) → Encode (place an item at a stop, AI helps) → Recall (
 - **Palace** = progress bar. Cottage → castle; mastered technique unlocks a room; each item sits at a
   numbered **stop** along a walking path. Stops are coloured by memory strength (green solid, yellow due,
   pink fading).
-- **Word drill**: step 1 Memorize (word → place at stop, AI idea on a sticky note), step 2 Recall (walk
+- **Word drill**: step 1 Memorize (word → sound-alike → image at a stop; rewrite it on the sticky note), step 2 Recall (walk
   the palace, type what's at each stop, red-pen grading).
 - **Daily Challenge**: same puzzle for everyone, shareable result card.
 - **Boss fights** to graduate a technique; ranks Novice → Grandmaster.
@@ -56,8 +56,8 @@ Learning is always free; premium sells scale and convenience.
 | Free | Premium |
 | --- | --- |
 | All techniques and lessons | Unlimited palaces and rooms |
-| 1 palace | Unlimited AI mnemonics |
-| ~5 AI mnemonics/day | Exam, language and topic packs |
+| 1 palace | AI mnemonics for your own items (once paid accounts exist) |
+| Pack mnemonics, write your own | Exam, language and topic packs |
 | Daily challenge, leagues, streaks | Retention stats, weak spots |
 | Basic spaced repetition | Streak freezes, palace themes |
 

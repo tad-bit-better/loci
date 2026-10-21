@@ -2,6 +2,10 @@
 
 Newest first. One entry per decision: what, why, and what would make us revisit it.
 
+## 2026-10-19 — No AI until paid accounts; database-driven content; free hosting only
+No LLM calls (and no LLM bill) until there are registered, paying users to fund them. Words, meanings and mnemonics live in Supabase `pack_words`, edited in the dashboard and pulled to SQLite; the app bundles a snapshot so a fresh install works offline. Hosting stays on free plans: Supabase free (500 MB DB, 50k MAU, pauses after 7 idle days), RevenueCat free under $2.5k monthly revenue, EAS free builds. Store fees (Apple $99/yr, Google $25 once) are unavoidable for publishing. The `generate-mnemonic` function and `mnemonic_cache` / `ai_usage` tables are parked, not removed.
+Revisit: when premium launches (AI for users' own items), or if the free DB limits or pausing bite.
+
 ## 2026-10-19 — Vocab drills use the keyword method (pulled forward from v1.2)
 Abstract words can't be pictured at a stop, so each GRE word gets a chain: a concrete sound-alike ("convoy + loot") and an image joining it to the meaning, set at the stop. The mnemonics are our own writing (`src/data/greMnemonics.ts`), not AI, so they work offline with steady quality and no cost; AI stays for users' own items. Drills only use words that have one, are 10 words long, and recall shows the meaning and asks for the word (the direction GRE fill-in-the-blank questions use), with the sound-alike as the hint. Users can rewrite the image; their version is saved as `items.mnemonic`.
 Revisit: once recall data shows which mnemonics fail most often; rewrite those first.

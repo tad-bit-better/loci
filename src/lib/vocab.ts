@@ -1,15 +1,9 @@
-import { greMnemonics, type Mnemonic } from '@/data/greMnemonics';
-import { greWords, type VocabWord } from '@/data/greVocab';
+import { packWords, type PackWord } from './packs';
 
 /** A pack word with its keyword mnemonic: everything the drill needs to teach it. */
-export type DrillWord = VocabWord & Mnemonic;
+export type DrillWord = PackWord & { soundsLike: string; image: string };
 
-/** Words that have a written mnemonic. Drills only use these, so no word appears without help. */
-export const drillableWords: DrillWord[] = greWords.flatMap((v) =>
-  greMnemonics[v.word] ? [{ ...v, ...greMnemonics[v.word] }] : [],
-);
-
-export const mnemonicFor = (word: string): Mnemonic | undefined => greMnemonics[word];
+const hasMnemonic = (w: PackWord): w is DrillWord => Boolean(w.soundsLike && w.image);
 
 /** Small seeded PRNG (mulberry32): the same seed gives the same sequence on every device. */
 function seeded(seed: number) {
@@ -28,13 +22,13 @@ function hash(s: string) {
 }
 
 /**
- * `n` distinct drillable words. With a seed (the Daily Challenge passes the date), everyone on the
- * same app version gets the same words; until `daily_challenges` seeds come from the server, adding
- * mnemonics changes the daily words.
+ * `n` distinct words that have a mnemonic, so no word appears without help. With a seed (the Daily
+ * Challenge passes the date), devices with the same pack contents get the same words; until
+ * `daily_challenges` seeds come from the server, editing the pack changes the daily words.
  */
 export function pickWords(n: number, seed?: string): DrillWord[] {
   const rand = seed ? seeded(hash(seed)) : Math.random;
-  const pool = [...drillableWords];
+  const pool = packWords().filter(hasMnemonic);
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
